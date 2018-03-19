@@ -1,2 +1,2 @@
-# Divers-Script
+# HELPER C# Script
 C# Scripts
