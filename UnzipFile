@@ -1,0 +1,20 @@
+/// <summary>
+/// Extract the .zip package to the current directory.
+/// </summary>
+/// <param name="destinationPath">Application .zip package</param>
+/// <returns></returns>
+private Boolean ExtractPackage(String destinationPath)
+{
+    try
+    {
+        if (File.Exists(destinationPath))
+            return ZipExtractor.Decompress(new FileInfo(destinationPath));
+        else
+            return true;
+    }
+    catch (Exception e)
+    {
+        LoggerHelper.Write("Error extracting pacakge", e);
+    }
+    return false;
+}
