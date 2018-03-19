@@ -1,0 +1,28 @@
+/// <summary>
+/// Copy updated file to source file
+/// </summary>
+/// <param name="sourcePath">source files path</param>
+/// <param name="destinationPath">destination files path</param>
+/// <returns></returns>
+private bool CopyUpdatedFile(string sourcePath, string destinationPath)
+{
+    try
+    {
+        // Get all folders in sourcePath folder
+        foreach (var dirPath in Directory.GetDirectories(sourcePath, "*", SearchOption.AllDirectories))
+            Directory.CreateDirectory(dirPath.Replace(sourcePath, destinationPath));
+
+        // Get all files in sourcePath folder
+        foreach (var newPath in Directory.GetFiles(sourcePath, "*.*",SearchOption.AllDirectories))
+        {
+            System.IO.File.Copy(newPath, newPath.Replace(sourcePath, destinationPath), true);
+        }
+
+        return true;
+    }
+    catch (Exception ex )
+    {
+        LoggerHelper.Write(ex);
+        return false;
+    }
+}
