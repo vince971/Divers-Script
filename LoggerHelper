@@ -10,11 +10,11 @@ namespace DAL.Tools
 {
     public static class LoggerHelper
     {
-        private const string _EventSrc = "AltecLauncher.log";
-        private const string _EventFile = "AltecLauncher";
+        private const string _EventSrc = "text.log";
+        private const string _EventFile = "text";
         
         // Under admin PowerShell
-        // new-eventlog -source AltecLauncher.log -logname AltecLauncher.log "   
+        // new-eventlog -source text.log -logname text.log "   
 
         /// <summary>
         /// Writes the specified message.
