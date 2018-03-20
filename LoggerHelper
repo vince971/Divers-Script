@@ -1,0 +1,201 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Diagnostics.Eventing.Reader;
+using System.IO;
+using System.Linq;
+using System.Text;
+
+namespace DAL.Tools
+{
+    public static class LoggerHelper
+    {
+        private const string _EventSrc = "AltecLauncher.log";
+        private const string _EventFile = "AltecLauncher";
+        
+        // Under admin PowerShell
+        // new-eventlog -source AltecLauncher.log -logname AltecLauncher.log "   
+
+        /// <summary>
+        /// Writes the specified message.
+        /// </summary>
+        /// <param name="message">The message.</param>
+        public static void Write(string message)
+        {
+            if (EventLog.SourceExists(_EventSrc))
+            {
+                EventLog.WriteEntry(_EventSrc, message, EventLogEntryType.Error);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="message"></param>
+        public static void WriteInFile(string message)
+        {
+            FileStream fs = null;
+            var uniqueNumber = DateTime.Now.Year + DateTime.Now.Month.ToString("00") + DateTime.Now.Day.ToString("00");
+            var finalFileName = _EventFile + "_" + uniqueNumber + ".log";
+            if (File.Exists(Directory.GetCurrentDirectory() + "\\" + finalFileName))
+            {
+
+                fs = new FileStream(Directory.GetCurrentDirectory() + "\\" + finalFileName, FileMode.Append,
+                                            FileAccess.Write);
+            }
+            else
+            {
+
+                fs = new FileStream(Directory.GetCurrentDirectory() + "\\" + finalFileName, FileMode.OpenOrCreate,
+                                            FileAccess.Write);
+            }
+
+            using (var sw = new StreamWriter(fs))
+            {
+                sw.WriteLine("Erreur : " + DateTime.Now + " : " + message);
+            }
+        }
+
+        /// <summary>
+        /// Writes the specified message.
+        /// </summary>
+        /// <param name="message">The message.</param>
+        /// <param name="eventLogEntryType">Type of the event log entry.</param>
+        public static void Write(string message, EventLogEntryType eventLogEntryType)
+        {
+            try
+            {
+                if (EventLog.SourceExists(_EventSrc))
+                {
+                    EventLog.WriteEntry(_EventSrc, message, eventLogEntryType);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Merci de vérifier que l'observateur d'événements de Windows contient bien la source AltecLauncher.log. Si cela n'est pas le cas alors il faut executer dans PowerShell la commande suivante en tant qu'administrateur : new-eventlog -source AltecLauncher.Log -logname AltecLauncher.Log " + ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="eventLogEntryType"></param>
+        public static void WriteInFile(string message, EventLogEntryType eventLogEntryType)
+        {
+            FileStream fs = null;
+            var uniqueNumber = DateTime.Now.Year + DateTime.Now.Month.ToString("00") + DateTime.Now.Day.ToString("00");
+            var finalFileName = _EventFile + "_" + uniqueNumber + ".log";
+            if (File.Exists(Directory.GetCurrentDirectory() + "\\" + finalFileName))
+            {
+
+                fs = new FileStream(Directory.GetCurrentDirectory() + "\\" + finalFileName, FileMode.Append,
+                                            FileAccess.Write);
+            }
+            else
+            {
+
+                fs = new FileStream(Directory.GetCurrentDirectory() + "\\" + finalFileName, FileMode.OpenOrCreate,
+                                            FileAccess.Write);
+            }
+
+            using (var sw = new StreamWriter(fs))
+            {
+                sw.WriteLine((eventLogEntryType == EventLogEntryType.Error ? "Erreur : " : "Information : ") + DateTime.Now + " : " + message);
+            }
+        }
+
+        /// <summary>
+        /// Writes the specified message.
+        /// </summary>
+        /// <param name="messageFormat">The message format.</param>
+        /// <param name="eventLogEntryType">Type of the event log entry.</param>
+        public static void Write(EventLogEntryType eventLogEntryType, string messageFormat, params string[] args)
+        {
+            if (EventLog.SourceExists(_EventSrc))
+            {
+                EventLog.WriteEntry(_EventSrc, string.Format(messageFormat, args), eventLogEntryType);
+            }
+        }
+
+        /// <summary>
+        /// Writes the specified ex.
+        /// </summary>
+        /// <param name="message">The message.</param>
+        /// <param name="ex">The ex.</param>
+        public static void Write(string message, Exception ex)
+        {
+            if (EventLog.SourceExists(_EventSrc))
+            {
+                var sb = new StringBuilder();
+                sb.AppendLine(message);
+                sb.AppendLine(ex.ToString());
+
+                EventLog.WriteEntry(_EventSrc, sb.ToString(), EventLogEntryType.Error);
+            }
+        }
+
+        /// <summary>
+        /// Writes the specified ex.
+        /// </summary>
+        /// <param name="ex">The ex.</param>
+        public static void Write(Exception ex)
+        {
+            if (EventLog.SourceExists(_EventSrc) == true && ex != null && ex.Message != "null")
+            {
+                var sb = new StringBuilder();
+                sb.AppendLine("Message: " + ex.Message);
+                sb.AppendLine("Inner Exception: " + ex.InnerException);
+                sb.AppendLine("Call Stack: " + ex.StackTrace);
+
+                EventLog.WriteEntry(_EventSrc, sb.ToString(), EventLogEntryType.Error);
+            }
+        }
+
+        /// <summary>
+        /// Get EventLog
+        /// </summary>
+        /// <returns></returns>
+        public static List<Tuple<DateTime, string>> QueryActiveLog()
+        {
+            // Query two different event logs using a structured query.
+            var eventsQuery = new EventLogQuery(_EventSrc, PathType.LogName);
+            eventsQuery.ReverseDirection = true;
+            var logReader = new EventLogReader(eventsQuery);
+
+            // Display event info
+            return DisplayEventAndLogInformation(logReader);
+
+        }
+
+        /// <summary>
+        /// Get EventLog
+        /// </summary>
+        /// <param name="logReader"></param>
+        /// <returns></returns>
+        private static List<Tuple<DateTime, string>> DisplayEventAndLogInformation(EventLogReader logReader)
+        {
+            var date = new DateTime();
+            var description = string.Empty;
+            var events = new List<Tuple<DateTime, string>>();
+
+            for (var eventInstance = logReader.ReadEvent(); null != eventInstance; eventInstance = logReader.ReadEvent())
+            {
+                try
+                {
+                    var logRecord = (EventLogRecord)eventInstance;
+                    date = logRecord.TimeCreated.HasValue ? logRecord.TimeCreated.Value : DateTime.Now;
+                    description = eventInstance.FormatDescription().Replace(Environment.NewLine, "</br >");
+
+                    events.Add(new Tuple<DateTime, string>(date, description));
+                }
+                catch (EventLogException ex)
+                {
+                    Write("Problème pour lire le eventLog", ex);
+                }
+            }
+
+            return events.OrderByDescending(x => x.Item1.Date).ThenByDescending(c => c.Item1.TimeOfDay).ToList();
+        }
+    }
+}
