@@ -72,7 +72,7 @@ namespace DAL.Tools
             }
             catch (Exception ex)
             {
-                throw new Exception("Merci de vérifier que l'observateur d'événements de Windows contient bien la source AltecLauncher.log. Si cela n'est pas le cas alors il faut executer dans PowerShell la commande suivante en tant qu'administrateur : new-eventlog -source AltecLauncher.Log -logname AltecLauncher.Log " + ex.Message);
+                throw new Exception("Merci de vérifier que l'observateur d'événements de Windows contient bien la source "+_EventSrc+". Si cela n'est pas le cas alors il faut executer dans PowerShell la commande suivante en tant qu'administrateur : new-eventlog -source "+_EventSrc+" -logname "+_EventSrc+" " + ex.Message);
             }
         }
 
