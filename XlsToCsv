@@ -20,7 +20,7 @@ namespace Converter
                 throw new FileNotFoundException(excelFilePath);
 
             if(File.Exists(csvOutputFile))
-                throw new ArgumentException($"File exists: {csvOutputFile}");
+                 csvOutputFile = csvOutputFile.Replace(".csv", $@"{DateTime.Now.ToShortDateString().Replace(@"/", "")}.csv");
             
             // Connection 
             var conStr = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" + excelFilePath + ";Extended Properties='Excel 8.0;HDR=Yes;IMEX=1'";
